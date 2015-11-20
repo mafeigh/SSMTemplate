@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context.xsd
+           http://www.springframework.org/schema/tx
+           http://www.springframework.org/schema/tx/spring-tx.xsd
+           http://www.springframework.org/schema/aop
+           http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<context:component-scan base-package="com.pingan.*">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+
+	<!--spring读取配置文件-->
+   	<bean id="propertyPlaceholderConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations" value="classpath:database.properties"/>
+	</bean>
+
+	<!--spring aop使用annotation-->
+	<aop:aspectj-autoproxy proxy-target-class="true"/>
+
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${database.driver}"/>
+		<property name="jdbcUrl" value="${database.url}"/>
+		<property name="user" value="${database.username}"/>
+		<property name="password" value="${database.password}"/>
+		<property name="loginTimeout" value="3000"/>
+		<property name="checkoutTimeout" value="30000"/>
+		<property name="preferredTestQuery" value="select 1 from dual"/>
+		<property name="idleConnectionTestPeriod" value="18000"/>
+		<property name="testConnectionOnCheckout" value="true"/>
+		<property name="minPoolSize"  value="1"/>
+		<property name="maxPoolSize" value="50"/>
+		<property name="initialPoolSize" value="1"/>
+		<property name="acquireIncrement" value="1"/>
+		<property name="acquireRetryAttempts" value="30"/>
+		<property name="acquireRetryDelay" value="1000"/>
+		<property name="maxIdleTime" value="25000"/>
+	</bean>
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<!--<property name="configLocation" value="classpath:mybatis-config.xml" />-->
+		<property name="typeAliasesPackage" value="com.pingan.model" />
+		<property name="mapperLocations" value="classpath:/mappers/*.xml" />
+		<!--mybatis分页插件-->
+		<property name="plugins">
+			<array>
+				<bean class="com.github.pagehelper.PageHelper">
+					<property name="properties">
+						<value>
+							dialect=mysql
+						</value>
+					</property>
+				</bean>
+			</array>
+		</property>
+	</bean>
+
+	<!--自己实现dao，需要传入这个对象用来建立session-->
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory"/>
+	</bean>
+
+	<!--生成mapper的实现类-->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.pingan.mapper"/>
+	</bean>
+
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<!--读取配置文件-->
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>config</value>
+			</list>
+		</property>
+	</bean>
+
+    <!--jmx支持-->
+    <context:mbean-export registration="failOnExisting" />
+
+	<import resource="applicationContext-activiti.xml"/>
+    <!--<import resource="applicationContext-quartz.xml"/>-->
+</beans>

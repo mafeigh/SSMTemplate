@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+	<!-- 调度工厂，如果将lazy-init='false'那么容器启动就会执行调度程序 -->
+	<bean lazy-init="true" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="exampleTrigger" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 调度触发器 -->
+	<bean id="exampleTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="exampleJobDetail" />
+		<!-- cron表达式 -->
+		<property name="cronExpression" value="0 0/1 23 * * ?" />
+	</bean>
+
+	<!-- 定义目标bean和bean中的方法 -->
+	<bean id="exampleJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<!-- 要执行的类 -->
+		<property name="targetObject" ref="exampleScheduler" />
+		<!-- 要执行的方法名称 -->
+		<property name="targetMethod" value="execute" />
+		<!-- 如果是false 多个job不会并发运行，第二个job将不会在第一个job完成之前开始 -->
+		<property name="concurrent" value="false" />
+	</bean>
+</beans>

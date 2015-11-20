@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/processdef">
+    <process id="testprocess" isExecutable="true">
+        <startEvent id="start"></startEvent>
+        <endEvent id="end"></endEvent>
+        <endEvent id="tend">
+            <terminateEventDefinition></terminateEventDefinition>
+        </endEvent>
+        <exclusiveGateway id="exgate" default="f2"></exclusiveGateway>
+        <scriptTask id="stask" scriptFormat="javascript" activiti:autoStoreVariables="false">
+            <script>i+=1;
+                execution.setVariable("i", i+1);</script>
+        </scriptTask>
+        <sequenceFlow id="f5" sourceRef="stask" targetRef="end"></sequenceFlow>
+        <serviceTask id="javatask" activiti:class="com.pingan.activiti.ExampleServiceTask"></serviceTask>
+        <sequenceFlow id="f1" sourceRef="start" targetRef="exgate"></sequenceFlow>
+        <sequenceFlow id="f2" sourceRef="exgate" targetRef="javatask"></sequenceFlow>
+        <userTask id="usertask" activiti:candidateUsers="jeff1,jeff2" activiti:candidateGroups="manager"></userTask>
+        <sequenceFlow id="f3" sourceRef="exgate" targetRef="stask">
+            <conditionExpression xsi:type="tFormalExpression">${i == '2'}</conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="f4" sourceRef="javatask" targetRef="tend"></sequenceFlow>
+        <endEvent id="tend2">
+            <terminateEventDefinition></terminateEventDefinition>
+        </endEvent>
+        <sequenceFlow id="f7" sourceRef="exgate" targetRef="usertask">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${i=='1'}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="f6" sourceRef="usertask" targetRef="tend2"></sequenceFlow>
+    </process>
+</definitions>
